@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام كاشير العطارة والبقالة</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- شريط التنقل العلوي -->
+    <header class="navbar">
+        <div class="logo">🛒 نظام كاشير العطارة والبقالة</div>
+        <nav class="nav-links">
+            <button class="nav-btn active" data-tab="cashier">شاشة الكاشير</button>
+            <button class="nav-btn" data-tab="products">إدارة المنتجات والمخزون</button>
+            <button class="nav-btn" data-tab="orders">سجل الأوردرات</button>
+            <button class="nav-btn" data-tab="reports">التقارير اليومية</button>
+            <button class="nav-btn" data-tab="suppliers">إدارة الموردين والمشتريات</button>
+            <button class="nav-btn" data-tab="settings">النسخ الاحتياطي</button>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <!-- 1. شاشة الكاشير -->
+        <section id="cashier" class="tab-content active">
+          <div id="lowStockAlertBanner" class="alert-banner" style="display: none;"></div>
+            <div class="cashier-grid">
+                <div class="products-area">
+                    <div class="categories-bar" id="categoriesBar"></div>
+                    <div class="products-grid" id="productsGrid"></div>
+                </div>
+                <div class="cart-area">
+                    <h3>الأوردر الحالي</h3>
+                    <div class="cart-items-container">
+                        <table class="cart-table">
+                            <thead>
+                                <tr>
+                                    <th>الصنف</th>
+                                    <th>كمية</th>
+                                    <th>السعر</th>
+                                    <th>الإجمالي</th>
+                                    <th>حذف</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="cart-summary">
+                        <div class="total-row" style="font-size: 1rem; margin-bottom: 8px;">
+                            <span>المجموع الفرعي:</span>
+                            <span id="subTotal">0.00 ج.م</span>
+                        </div>
+                        <div class="total-row" style="font-size: 1rem; margin-bottom: 8px; align-items: center;">
+                            <span>قيمة الخصم (ج.م):</span>
+                            <input type="number" id="discountInput" value="0" min="0" step="0.5" style="width: 100px; padding: 4px; text-align: center;">
+                        </div>
+                        <div class="total-row">
+                            <span>الإجمالي النهائي:</span>
+                            <span id="cartTotal">0.00 ج.م</span>
+                        </div>
+                        <div class="cart-actions">
+                            <button id="checkoutPrintBtn" class="btn btn-success">إنشاء الأوردر وطباعة البون</button>
+                            <button id="clearCartBtn" class="btn btn-danger">تفريغ الأوردر</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. إدارة المنتجات والمخزون -->
+        <section id="products" class="tab-content">
+            <div class="section-header">
+                <h2>إدارة المنتجات والمخزون وتواريخ الصلاحية</h2>
+            </div>
+            <div class="management-grid">
+                <div class="form-card">
+                    <h3>إضافة منتج جديد</h3>
+                    <form id="productForm">
+                        <div class="form-group">
+                            <label>اسم المنتج:</label>
+                            <input type="text" id="prodName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>القسم:</label>
+                            <select id="prodCategory" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>سعر البيع (ج.م):</label>
+                            <input type="number" id="prodPrice" step="0.5" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>الكمية المتاحة بالمخزون:</label>
+                            <input type="number" id="prodStock" min="0" value="10" required>
+                        </div>
+                        <div class="form-group">
+                            <label>حد التنبيه (قرب النفاذ):</label>
+                            <input type="number" id="prodMinStock" min="0" value="3" required>
+                        </div>
+                        <div class="form-group">
+                            <label>تاريخ الإنتاج:</label>
+                            <input type="date" id="prodDate">
+                        </div>
+                        <div class="form-group">
+                            <label>تاريخ التوريد / الصلاحية:</label>
+                            <input type="date" id="prodExpiry">
+                        </div>
+                        <button type="submit" class="btn btn-primary">حفظ المنتج</button>
+                    </form>
+                    <hr style="margin: 20px 0;">
+                    <h3>إضافة قسم جديد</h3>
+                   <form id="categoryForm">
+                        <div class="form-group">
+                            <label>اسم القسم:</label>
+                            <input type="text" id="catName" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">حفظ القسم</button>
+                    </form>
+                    
+                    <hr style="margin: 20px 0;">
+                    <h3>الأقسام الحالية</h3>
+                    <div id="categoriesListContainer" style="max-height: 150px; overflow-y: auto; margin-top: 10px;">
+                        <ul id="categoriesList" style="list-style: none; padding: 0;"></ul>
+                    </div>
+                </div>
+                <div class="list-card">
+                    <h3>قائمة المنتجات والمخزون</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>المنتج</th>
+                                <th>القسم</th>
+                                <th>السعر</th>
+                                <th>المخزون</th>
+                                <th>الإنتاج / التوريد</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. سجل الأوردرات -->
+        <section id="orders" class="tab-content">
+            <div class="section-header">
+                <h2>سجل الأوردرات والفواتير</h2>
+                <div class="filter-group">
+                    <label>اختر التاريخ:</label>
+                    <input type="date" id="filterDate">
+                    <button id="searchOrdersBtn" class="btn btn-primary">عرض الأوردرات</button>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>رقم الأوردر</th>
+                        <th>التاريخ</th>
+                        <th>الوقت</th>
+                        <th>الإجمالي</th>
+                        <th>التفاصيل</th>
+                        <th>طباعة</th>
+                        <th>حذف</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody"></tbody>
+            </table>
+        </section>
+
+        <!-- 4. التقارير -->
+        <section id="reports" class="tab-content">
+            <div class="section-header">
+                <h2>التقارير والحساب الختامي اليومي</h2>
+                <div class="filter-group">
+                    <label>اختر التاريخ:</label>
+                    <input type="date" id="reportDate">
+                    <button id="generateReportBtn" class="btn btn-primary">عرض التقرير</button>
+                </div>
+            </div>
+            <div class="report-cards">
+                <div class="stat-card">
+                    <h3>إجمالي عدد الأوردرات</h3>
+                    <p id="repTotalOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>إجمالي المبيعات</h3>
+                    <p id="repTotalSales">0.00 ج.م</p>
+                </div>
+            </div>
+            <div class="list-card">
+                <h3>مبيعات الأصناف التفصيلية</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>اسم المنتج</th>
+                            <th>الكمية المباعة</th>
+                            <th>إجمالي المبيعات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportItemsBody"></tbody>
+                </table>
+            </div>
+        </section>
+<!-- صفحة إدارة الموردين -->
+        <section id="suppliers" class="tab-content">
+            <div class="section-header">
+                <h2>إدارة الموردين وحسابات المشتريات</h2>
+            </div>
+            <div class="management-grid">
+                <div class="form-card">
+                    <h3>تسجيل مورد جديد أو توريد بضاعة</h3>
+                    <form id="supplierForm">
+                        <div class="form-group">
+                            <label>اسم المورد / الشركة:</label>
+                            <input type="text" id="suppName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>رقم الهاتف:</label>
+                            <input type="text" id="suppPhone">
+                        </div>
+                        <div class="form-group">
+                            <label>الصنف المورد:</label>
+                            <input type="text" id="suppItem" required placeholder="مثال: كمون، أرز، زيوت...">
+                        </div>
+                        <div class="form-group">
+                            <label>إجمالي قيمة الفاتورة (ج.م):</label>
+                            <input type="number" id="suppTotalBill" min="0" step="0.5" required>
+                        </div>
+                        <div class="form-group">
+                            <label>المبلغ المدفوع للمورد (ج.م):</label>
+                            <input type="number" id="suppPaid" min="0" step="0.5" value="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>تاريخ التوريد:</label>
+                            <input type="date" id="suppDate" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">حفظ عملية التوريد</button>
+                    </form>
+                </div>
+                <div class="list-card">
+                    <h3>حسابات الموردين والديون المستحقة</h3>
+                    <div style="margin-bottom: 15px; font-weight: bold; color: var(--danger);">
+                        إجمالي المبالغ المطلوبة للموردين (الآذان/الباقي): <span id="totalSuppliersDebt">0.00</span> ج.م
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>اسم المورد</th>
+                                <th>الهاتف</th>
+                                <th>الصنف</th>
+                                <th>الإجمالي</th>
+                                <th>المدفوع</th>
+                                <th>الباقي (عليه)</th>
+                                <th>التاريخ</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suppliersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        <!-- 5. الإعدادات -->
+        <section id="settings" class="tab-content">
+            <div class="section-header">
+                <h2>إعدادات النظام والنسخ الاحتياطي</h2>
+            </div>
+            <div class="settings-grid">
+                <div class="form-card">
+                    <h3>تصدير نسخة احتياطية</h3>
+                    <p>حفظ جميع البيانات (المنتجات والمخزون والأوردرات) في ملف JSON.</p>
+                    <button id="exportBtn" class="btn btn-primary" style="margin-top: 15px;">تصدير النسخة</button>
+                </div>
+                <div class="form-card">
+                    <h3>استيراد نسخة احتياطية</h3>
+                    <p>استعادة البيانات من ملف JSON سابق.</p>
+                    <input type="file" id="importFile" accept=".json" style="margin: 15px 0; display: block;">
+                    <button id="importBtn" class="btn btn-warning">استيراد البيانات</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- قالب البون الحراري -->
+    <div id="printReceiptContainer" class="print-receipt-only">
+        <div class="receipt-header">
+            <h2>عطارة وبقالة النخبة</h2>
+            <p>أوردر رقم: <span id="pReceiptNum"></span></p>
+            <p>التاريخ: <span id="pReceiptDate"></span> - الوقت: <span id="pReceiptTime"></span></p>
+        </div>
+        <hr>
+        <table class="receipt-table">
+            <thead>
+                <tr>
+                    <th>الصنف</th>
+                    <th>كمية</th>
+                    <th>سعر</th>
+                    <th>إجمالي</th>
+                </tr>
+            </thead>
+            <tbody id="pReceiptItems"></tbody>
+        </table>
+        <hr>
+        <div class="receipt-footer">
+            <p>المجموع: <span id="pReceiptSubTotal"></span> ج.م</p>
+            <p>الخصم: <span id="pReceiptDiscount"></span> ج.م</p>
+            <p><strong>الإجمالي النهائي: <span id="pReceiptTotal"></span> ج.م</strong></p>
+            <p class="thanks">شكرًا لزيارتكم!</p>
+        </div>
+    </div>
+
+    <!-- نافذة تفاصيل الأوردر -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>تفاصيل الأوردر رقم <span id="modalOrderNum"></span></h3>
+            <p>التاريخ: <span id="modalOrderDate"></span> | الوقت: <span id="modalOrderTime"></span></p>
+            <table class="data-table" style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>الصنف</th>
+                        <th>كمية</th>
+                        <th>سعر الوحدة</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody id="modalItemsBody"></tbody>
+            </table>
+            <div style="margin-top: 15px; font-size: 0.95rem;">
+                المجموع الفرعي: <span id="modalOrderSubTotal">0</span> ج.م | الخصم: <span id="modalOrderDiscount">0</span> ج.م
+            </div>
+            <div style="margin-top: 5px; font-weight: bold; font-size: 1.1rem;">
+                الإجمالي النهائي: <span id="modalOrderTotal"></span> ج.م
+            </div>
+            <div style="margin-top: 15px;">
+                <button id="modalPrintBtn" class="btn btn-primary">إعادة طباعة البون</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
